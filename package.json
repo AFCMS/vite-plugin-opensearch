@@ -1,9 +1,12 @@
 {
     "name": "@afcms/vite-plugin-opensearch",
     "version": "0.0.0",
-    "description": "",
+    "description": "Generate OpenSearch 1.1 browser search descriptions with Vite",
     "keywords": [
-        "vite-plugin"
+        "browser-search",
+        "opensearch",
+        "vite-plugin",
+        "xml"
     ],
     "homepage": "https://github.com/AFCMS/vite-plugin-opensearch#readme",
     "bugs": {
@@ -26,7 +29,8 @@
     "scripts": {
         "build": "tsdown",
         "dev": "tsdown --watch",
-        "test": "vitest",
+        "test": "vitest run",
+        "test:watch": "vitest",
         "typecheck": "tsc --noEmit",
         "release": "bumpp",
         "prepublishOnly": "pnpm run build",

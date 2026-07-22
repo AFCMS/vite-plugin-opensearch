@@ -1,49 +1,62 @@
 import type { Plugin } from "vite";
 
-export interface OpenSearchPluginOptions {
-  readonly baseUrl: string;
-  readonly configs: readonly OpenSearchConfig[];
+import { generateOpenSearchDescription } from "./generate";
+import type { OpenSearchPluginOptions } from "./types";
+import { getBrowserCompatibilityWarnings, validatePluginOptions } from "./validation";
+
+export type {
+  OpenSearchDescription,
+  OpenSearchImage,
+  OpenSearchPluginOptions,
+  OpenSearchQuery,
+  OpenSearchQueryRole,
+  OpenSearchSyndicationRight,
+  OpenSearchURL,
+  OpenSearchURLRelation,
+} from "./types";
+
+interface GeneratedDescription {
+  readonly fileName: string;
+  readonly source: string;
 }
 
-type OpenSearchCongigUrlRel = "results" | "suggestions" | "self" | "collection";
+function prepareDescriptions(options: OpenSearchPluginOptions): readonly GeneratedDescription[] {
+  const baseURL = validatePluginOptions(options);
+  const generatedDescriptions: GeneratedDescription[] = [];
 
-export interface OpenSearchConfigUrl {
-  readonly template: string;
-  /**
-   * The MIME type of the resource being described.
-   */
-  readonly type: string;
-  /**
-   * @default "results"
-   */
-  readonly rel?: OpenSearchCongigUrlRel;
-  readonly indexOffset?: number;
-  readonly pageOffset?: number;
-}
+  for (const description of options.descriptions) {
+    generatedDescriptions.push({
+      fileName: description.fileName,
+      source: generateOpenSearchDescription(description, baseURL),
+    });
+  }
 
-export interface OpenSearchConfig {
-  readonly shortName: string;
-  readonly description: string;
-  readonly urls: readonly string[];
-}
-
-export function fn(): string {
-  return "Hello, tsdown!";
+  return generatedDescriptions;
 }
 
 /**
- *
+ * Creates a build-only Vite plugin that emits OpenSearch 1.1 XML description
+ * documents at the configured output paths.
  */
 export default function openSearch(options: OpenSearchPluginOptions): Plugin {
   return {
     name: "@afcms/vite-plugin-opensearch",
     apply: "build",
 
-    generateBundle(outputOptions, bundle, isWrite) {
-      console.log("Options:", options);
-      console.log("Output options:", outputOptions);
-      console.log("Bundle:", bundle);
-      console.log("Is write:", isWrite);
+    generateBundle(): void {
+      const generatedDescriptions = prepareDescriptions(options);
+      const warnings = getBrowserCompatibilityWarnings(options.descriptions);
+
+      for (const warning of warnings) {
+        this.warn(warning);
+      }
+      for (const description of generatedDescriptions) {
+        this.emitFile({
+          type: "asset",
+          fileName: description.fileName,
+          source: description.source,
+        });
+      }
     },
   };
 }
