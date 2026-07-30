@@ -74,6 +74,12 @@
         "vite": {
             "type": "compatible",
             "versions": "^8.0.0"
+        },
+        "rollup": {
+            "type": "incompatible"
+        },
+        "rolldown": {
+            "type": "incompatible"
         }
     }
 }
