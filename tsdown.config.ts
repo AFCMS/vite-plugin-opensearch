@@ -5,7 +5,7 @@ export default defineConfig({
   sourcemap: false,
   minify: true,
   dts: {
-    tsgo: true,
+    generator: "tsgo",
   },
   platform: "node",
   exports: true,
