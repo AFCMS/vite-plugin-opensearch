@@ -7,6 +7,9 @@
     "editor.defaultFormatter": "oxc.oxc-vscode",
     "oxc.fmt.configPath": "oxfmt.config.ts",
     "oxc.configPath": "oxlint.config.ts",
+    "files.associations": {
+        "**/.github/workflows/*.{yml,yaml}": "github-actions-workflow"
+    },
     "[typescript]": {
         "editor.defaultFormatter": "oxc.oxc-vscode",
         "editor.tabSize": 2
@@ -30,5 +33,8 @@
             "strings": true
         },
         "editor.suggest.insertMode": "replace"
+    },
+    "[github-actions-workflow]": {
+        "editor.tabSize": 2
     }
 }
