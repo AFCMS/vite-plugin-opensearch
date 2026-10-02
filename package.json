@@ -1,6 +1,6 @@
 {
     "name": "@afcms/vite-plugin-opensearch",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Generate OpenSearch 1.1 browser search descriptions with Vite",
     "keywords": [
         "browser-search",
