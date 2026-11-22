@@ -112,3 +112,26 @@ jobs:
             --verify-tag \
             --title "$GITHUB_REF_NAME" \
             --notes ""
+
+  jsr-publish:
+    name: JSR Publish
+    needs: build
+    runs-on: ubuntu-latest
+    if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')"
+    environment: npm-publish
+    permissions:
+      id-token: write # Required for OIDC authentication with JSR
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install PNPM
+        uses: pnpm/setup@v3.2.0
+        with:
+          install: true
+          require-lockfile: true
+
+      - name: Publish on JSR
+        run: pnpx jsr publish
