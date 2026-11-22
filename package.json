@@ -13,11 +13,21 @@
         "url": "https://github.com/AFCMS/vite-plugin-opensearch/issues"
     },
     "license": "MIT",
-    "author": "AFCMS <afcm.contact@gmail.com>",
+    "author": {
+        "name": "AFCMS",
+        "email": "afcm.contact@gmail.com",
+        "url": "https://afcms.dev"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/AFCMS/vite-plugin-opensearch.git"
     },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/AFCMS"
+        }
+    ],
     "files": [
         "dist"
     ],
