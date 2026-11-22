@@ -6,5 +6,7 @@ export default defineConfig({
   },
   rules: {
     "oxc/no-barrel-file": "error",
+    "import/extensions": ["error", { checkTypeImports: true, ignorePackages: true }],
+    "unicorn/prefer-node-protocol": "error",
   },
 });

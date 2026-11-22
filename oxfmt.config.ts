@@ -11,5 +11,12 @@ export default defineConfig({
       },
     },
   ],
-  ignorePatterns: ["dist", "node_modules", "coverage", "build", ".agents"],
+  ignorePatterns: [
+    "dist",
+    "node_modules",
+    "coverage",
+    "build",
+    ".agents",
+    ".github/workflows/actions.lock",
+  ],
 });

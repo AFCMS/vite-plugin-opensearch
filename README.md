@@ -20,8 +20,8 @@ The package requires Vite 8.
 Add the plugin to `vite.config.ts`:
 
 ```ts
-import { defineConfig } from "vite";
 import openSearch from "@afcms/vite-plugin-opensearch";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
