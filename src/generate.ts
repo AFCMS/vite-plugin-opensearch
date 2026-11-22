@@ -4,7 +4,7 @@ import type {
   OpenSearchQuery,
   OpenSearchURL,
 } from "./types";
-import { resolveOpenSearchURL } from "./url";
+import { resolveOpenSearchTemplate, resolveOpenSearchURL } from "./url";
 import { escapeXMLAttribute, escapeXMLText } from "./xml";
 
 interface XMLAttribute {
@@ -41,7 +41,7 @@ function serializeURL(url: OpenSearchURL, index: number, baseURL: URL): string {
   }
   attributes.push({
     name: "template",
-    value: resolveOpenSearchURL(url.template, baseURL, `urls[${index}].template`),
+    value: resolveOpenSearchTemplate(url.template, baseURL, `urls[${index}].template`),
   });
   return emptyElement("Url", attributes);
 }

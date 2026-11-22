@@ -5,7 +5,7 @@ import type {
   OpenSearchQuery,
   OpenSearchURL,
 } from "./types";
-import { resolveOpenSearchURL } from "./url";
+import { resolveOpenSearchTemplate, resolveOpenSearchURL } from "./url.ts";
 
 const MIME_TYPE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*\/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*$/u;
 const LANGUAGE_PATTERN =
@@ -158,7 +158,7 @@ function validateURL(url: OpenSearchURL, index: number, baseURL: URL, prefix: st
 
   assertNonEmptyString(url.template, `${label}.template`);
   validateTemplateParameters(url.template, `${label}.template`);
-  resolveOpenSearchURL(url.template, baseURL, `${label}.template`);
+  resolveOpenSearchTemplate(url.template, baseURL, `${label}.template`);
   validateMIMEType(url.type, `${label}.type`);
 
   if (url.rel !== undefined) {

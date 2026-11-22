@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { generateOpenSearchDescription } from "../src/generate";
-import type { OpenSearchDescription } from "../src/types";
-import { validatePluginOptions } from "../src/validation";
-import { escapeXMLAttribute, escapeXMLText } from "../src/xml";
+import { generateOpenSearchDescription } from "../src/generate.ts";
+import type { OpenSearchDescription } from "../src/types.ts";
+import { validatePluginOptions } from "../src/validation.ts";
+import { escapeXMLAttribute, escapeXMLText } from "../src/xml.ts";
 
 describe("generateOpenSearchDescription", (): void => {
   test("generates a minimal description and resolves its URL template", (): void => {
@@ -31,6 +31,106 @@ describe("generateOpenSearchDescription", (): void => {
   <Url type="text/html" template="https://example.com/search?q={searchTerms}&amp;page={startPage?}" />
 </OpenSearchDescription>
 `);
+  });
+
+  test.each([
+    {
+      name: "root-relative path placeholders",
+      template: "/search/{searchTerms}/page/{startPage?}",
+      baseURL: "https://example.com/docs/",
+      expected: "https://example.com/search/{searchTerms}/page/{startPage?}",
+    },
+    {
+      name: "relative path placeholders",
+      template: "search/{searchTerms}/page/{startPage?}",
+      baseURL: "https://example.com/docs/",
+      expected: "https://example.com/docs/search/{searchTerms}/page/{startPage?}",
+    },
+    {
+      name: "absolute path placeholders",
+      template: "https://other.example/search/{searchTerms}/page/{startPage?}",
+      baseURL: "https://example.com/docs/",
+      expected: "https://other.example/search/{searchTerms}/page/{startPage?}",
+    },
+    {
+      name: "optional path placeholders before a query string and fragment",
+      template: "/{startPage?}/search/{searchTerms}?lang={language?}&count={count?}#results",
+      baseURL: "https://example.com/",
+      expected:
+        "https://example.com/{startPage?}/search/{searchTerms}?lang={language?}&amp;count={count?}#results",
+    },
+    {
+      name: "path normalization after an optional placeholder",
+      template: "/{startPage?}/discard/../{searchTerms}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/{startPage?}/{searchTerms}",
+    },
+    {
+      name: "repeated placeholders",
+      template: "/{searchTerms}/{searchTerms}?page={startPage?}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/{searchTerms}/{searchTerms}?page={startPage?}",
+    },
+    {
+      name: "literal percent-encoded braces and slashes",
+      template: "/%7BsearchTerms%7D/%7bstartPage%3f%7d/a%2Fb/{searchTerms}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/%7BsearchTerms%7D/%7bstartPage%3f%7d/a%2Fb/{searchTerms}",
+    },
+    {
+      name: "normal encoding of spaces and Unicode",
+      template: "/café menu/{searchTerms}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/caf%C3%A9%20menu/{searchTerms}",
+    },
+    {
+      name: "literal marker-like text in the template",
+      template: "/%7bopensearch0%7d/{searchTerms}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/%7bopensearch0%7d/{searchTerms}",
+    },
+    {
+      name: "literal marker-like text inherited from the base URL",
+      template: "{searchTerms}",
+      baseURL: "https://example.com/%7bopensearch0%7d/",
+      expected: "https://example.com/%7bopensearch0%7d/{searchTerms}",
+    },
+    {
+      name: "literal marker-like text after URL whitespace normalization",
+      template: "/%7bopen\tsearch0%7d/{searchTerms}",
+      baseURL: "https://example.com/",
+      expected: "https://example.com/%7bopensearch0%7d/{searchTerms}",
+    },
+  ])("preserves $name", ({ template, baseURL, expected }): void => {
+    const description: OpenSearchDescription = {
+      fileName: "opensearch.xml",
+      shortName: "Docs",
+      description: "Search docs.",
+      urls: [{ type: "text/html", template }],
+    };
+    const resolvedBaseURL = validatePluginOptions({ baseURL, descriptions: [description] });
+
+    expect(generateOpenSearchDescription(description, resolvedBaseURL)).toContain(
+      `template="${expected}"`,
+    );
+  });
+
+  test("encodes literal image URL braces while preserving search placeholders", (): void => {
+    const description: OpenSearchDescription = {
+      fileName: "opensearch.xml",
+      shortName: "Docs",
+      description: "Search docs.",
+      urls: [{ type: "text/html", template: "/search/{searchTerms}" }],
+      images: [{ url: "/icons/{searchTerms}.png" }],
+    };
+    const baseURL = validatePluginOptions({
+      baseURL: "https://example.com/",
+      descriptions: [description],
+    });
+    const source = generateOpenSearchDescription(description, baseURL);
+
+    expect(source).toContain('template="https://example.com/search/{searchTerms}"');
+    expect(source).toContain("<Image>https://example.com/icons/%7BsearchTerms%7D.png</Image>");
   });
 
   test("generates every core description element in canonical order", (): void => {

@@ -1,8 +1,8 @@
 import type { Plugin } from "vite";
 
-import { generateOpenSearchDescription } from "./generate";
-import type { OpenSearchPluginOptions } from "./types";
-import { getBrowserCompatibilityWarnings, validatePluginOptions } from "./validation";
+import { generateOpenSearchDescription } from "./generate.ts";
+import type { OpenSearchPluginOptions } from "./types.ts";
+import { getBrowserCompatibilityWarnings, validatePluginOptions } from "./validation.ts";
 
 export type {
   OpenSearchDescription,

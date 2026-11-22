@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import type { OpenSearchDescription, OpenSearchPluginOptions } from "../src/types";
-import { getBrowserCompatibilityWarnings, validatePluginOptions } from "../src/validation";
+import type { OpenSearchDescription, OpenSearchPluginOptions } from "../src/types.ts";
+import { getBrowserCompatibilityWarnings, validatePluginOptions } from "../src/validation.ts";
 
 function createDescription(overrides: Partial<OpenSearchDescription> = {}): OpenSearchDescription {
   return {
@@ -157,6 +157,17 @@ const INVALID_CASES: readonly InvalidCase[] = [
       ],
     }),
     message: /invalid OpenSearch template parameter/u,
+  },
+  {
+    name: "invalid URL containing a template parameter",
+    options: createOptions({
+      descriptions: [
+        createDescription({
+          urls: [{ type: "text/html", template: "https://[invalid]/{searchTerms}" }],
+        }),
+      ],
+    }),
+    message: /descriptions\[0\]\.urls\[0\]\.template must be a valid absolute or relative URL/u,
   },
   {
     name: "multi-word tag entry",

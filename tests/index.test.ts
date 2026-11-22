@@ -5,69 +5,81 @@ import { join } from "node:path";
 import { build } from "vite";
 import { describe, expect, test, vi } from "vitest";
 
-import openSearch from "../src";
-import type { OpenSearchPluginOptions } from "../src";
+import openSearch from "../src/index.ts";
+import type { OpenSearchPluginOptions } from "../src/index.ts";
 
 describe("openSearch", (): void => {
-  test("emits multiple assets at exact nested file names in a Vite build", async (): Promise<void> => {
-    const root = await mkdtemp(join(tmpdir(), "vite-plugin-opensearch-"));
-    await writeFile(join(root, "index.html"), "<!doctype html><title>Test</title>", "utf8");
+  test.each([
+    {
+      name: "query placeholders",
+      template: "/search?q={searchTerms}",
+      resolvedTemplate: "https://example.com/search?q={searchTerms}",
+    },
+    {
+      name: "path placeholders",
+      template: "/search/{searchTerms}/page/{startPage?}",
+      resolvedTemplate: "https://example.com/search/{searchTerms}/page/{startPage?}",
+    },
+  ])(
+    "emits multiple assets at exact nested file names with $name in a Vite build",
+    async ({ template, resolvedTemplate }): Promise<void> => {
+      const root = await mkdtemp(join(tmpdir(), "vite-plugin-opensearch-"));
+      await writeFile(join(root, "index.html"), "<!doctype html><title>Test</title>", "utf8");
 
-    try {
-      const result = await build({
-        root,
-        configFile: false,
-        logLevel: "silent",
-        plugins: [
-          openSearch({
-            baseURL: "https://example.com/",
-            descriptions: [
-              {
-                fileName: "opensearch.xml",
-                shortName: "Site Search",
-                description: "Search the site.",
-                urls: [{ type: "text/html", template: "/search?q={searchTerms}" }],
-              },
-              {
-                fileName: "search/people.xml",
-                shortName: "People",
-                description: "Search people.",
-                urls: [{ type: "text/html", template: "/people?q={searchTerms}" }],
-              },
-            ],
-          }),
-        ],
-        build: {
-          write: false,
-          minify: false,
-          rolldownOptions: {
-            input: join(root, "index.html"),
+      try {
+        const result = await build({
+          root,
+          configFile: false,
+          logLevel: "silent",
+          plugins: [
+            openSearch({
+              baseURL: "https://example.com/",
+              descriptions: [
+                {
+                  fileName: "opensearch.xml",
+                  shortName: "Site Search",
+                  description: "Search the site.",
+                  urls: [{ type: "text/html", template }],
+                },
+                {
+                  fileName: "search/people.xml",
+                  shortName: "People",
+                  description: "Search people.",
+                  urls: [{ type: "text/html", template: "/people?q={searchTerms}" }],
+                },
+              ],
+            }),
+          ],
+          build: {
+            write: false,
+            minify: false,
+            rolldownOptions: {
+              input: join(root, "index.html"),
+            },
           },
-        },
-      });
-      const buildResult = Array.isArray(result) ? result[0] : result;
-      if (buildResult === undefined || !("output" in buildResult)) {
-        throw new Error("Expected Vite to return an in-memory build output.");
-      }
-
-      const sources = new Map<string, string>();
-      for (const output of buildResult.output) {
-        if (output.type === "asset" && typeof output.source === "string") {
-          sources.set(output.fileName, output.source);
+        });
+        const buildResult = Array.isArray(result) ? result[0] : result;
+        if (buildResult === undefined || !("output" in buildResult)) {
+          throw new Error("Expected Vite to return an in-memory build output.");
         }
-      }
 
-      expect([...sources.keys()]).toEqual(
-        expect.arrayContaining(["opensearch.xml", "search/people.xml"]),
-      );
-      expect(sources.get("opensearch.xml")).toContain(
-        'template="https://example.com/search?q={searchTerms}"',
-      );
-      expect(sources.get("search/people.xml")).toContain("<ShortName>People</ShortName>");
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  });
+        const sources = new Map<string, string>();
+        for (const output of buildResult.output) {
+          if (output.type === "asset" && typeof output.source === "string") {
+            sources.set(output.fileName, output.source);
+          }
+        }
+
+        expect([...sources.keys()]).toEqual(
+          expect.arrayContaining(["opensearch.xml", "search/people.xml"]),
+        );
+        expect(sources.get("opensearch.xml")).toContain(`template="${resolvedTemplate}"`);
+        expect(sources.get("search/people.xml")).toContain("<ShortName>People</ShortName>");
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   test("validates every description before emitting any asset", (): void => {
     const options: OpenSearchPluginOptions = {
